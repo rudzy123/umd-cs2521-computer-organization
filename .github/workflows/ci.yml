@@ -1,0 +1,40 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  linux-x86-64:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
+
+      - name: Build
+        run: cmake --build build
+
+      - name: Test
+        run: ctest --test-dir build --output-on-failure
+
+      - name: Run instruction-cycle simulator
+        run: ./build/cs2521_sim_demo
+
+      - name: Run cache-locality demonstration
+        run: ./build/cs2521_locality_demo
+
+      - name: Run representation and bit demonstrations
+        run: |
+          ./build/cs2521_repr_demo
+          ./build/cs2521_bits_demo
+
+      - name: Disassemble assembly objects
+        run: python3 scripts/disassemble.py build docs/generated-disassembly.txt
+
+      - name: Run the binary helper
+        run: python3 scripts/bit_lab.py -- 42 -42
